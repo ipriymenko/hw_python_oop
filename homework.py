@@ -2,6 +2,9 @@
 import inspect
 from typing import Callable, Type
 
+# Словарь - индекс, связывает класс тренировки с данными
+workout_index = {}
+
 
 class TrainingInitInfo:
     """Класс с данными необходимыми для создания объекта тренировки
@@ -10,10 +13,6 @@ class TrainingInitInfo:
     def __init__(self, cls: Type, data_len: int) -> None:
         self.cls = cls
         self.data_len = data_len
-
-
-# Словарь - индекс, связывает класс тренировки с данными
-workout_index: dict[str, TrainingInitInfo] = {}
 
 
 def reg_workout(workout_type: str, data_len: int = -1) -> Callable:
