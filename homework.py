@@ -1,5 +1,7 @@
 """СПРИНТ 2. ПРОЕКТ ФИТНЕС-ТРЕККЕР"""
 import inspect
+from abc import abstractmethod
+from dataclasses import dataclass, asdict
 from typing import Callable, Type
 
 # Словарь - индекс, связывает класс тренировки с данными
@@ -31,32 +33,33 @@ def reg_workout(workout_type: str, data_len: int = -1) -> Callable:
     return decor
 
 
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
+    training_type: str
+    duration: float
+    distance: float
+    speed: float
+    calories: float
 
-    def __init__(self, training_type: str, duration: float,
-                 distance: float, speed: float, calories: float) -> None:
-        self.training_type = training_type
-        self.duration = duration
-        self.distance = distance
-        self.speed = speed
-        self.calories = calories
+    MESSAGE = ('Тип тренировки: {training_type}; '
+               'Длительность: {duration:.3f} ч.; '
+               'Дистанция: {distance:.3f} км; '
+               'Ср. скорость: {speed:.3f} км/ч; '
+               'Потрачено ккал: {calories:.3f}.')
 
     def get_message(self) -> str:
         """Получить текст информационного сообщения."""
-        return (f'Тип тренировки: {self.training_type}; '
-                f'Длительность: {self.duration:.3f} ч.; '
-                f'Дистанция: {self.distance:.3f} км; '
-                f'Ср. скорость: {self.speed:.3f} км/ч; '
-                f'Потрачено ккал: {self.calories:.3f}.')
+
+        return self.MESSAGE.format(**asdict(self))
 
 
 class Training:
     """Базовый класс тренировки."""
 
-    LEN_STEP = 0.65
-    M_IN_KM = 1000
-    MIN_IN_H = 60
+    LEN_STEP = 0.65  # метры
+    M_IN_KM = 1000  # метров в км.
+    MIN_IN_H = 60  # минут в ч.
 
     def __init__(self,
                  action: int,
@@ -80,25 +83,28 @@ class Training:
         """Получить среднюю скорость движения."""
         return self.get_distance() / self.duration
 
+    @abstractmethod
     def get_spent_calories(self) -> float:
-        """Получить количество затраченных калорий."""
-        return 0.0
+        """Получить количество затраченных калорий.
+         * Метод Должен быть реализован в дочерних классах"""
+        raise NotImplementedError('"get_spent_calories" method not '
+                                  f'implemented in "{type(self).__name__}"!')
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
-        return InfoMessage(self.__class__.__name__,
+        return InfoMessage(type(self).__name__,
                            self.duration,
                            self.get_distance(),
                            self.get_mean_speed(),
                            self.get_spent_calories())
 
 
-@reg_workout("RUN")
+@reg_workout('RUN')
 class Running(Training):
     """Тренировка: бег."""
-    LEN_STEP = 0.65
-    CALORIES_MEAN_SPEED_MULTIPLIER = 18
-    CALORIES_MEAN_SPEED_SHIFT = 1.79
+    LEN_STEP = 0.65  # метры
+    CALORIES_MEAN_SPEED_MULTIPLIER = 18  # коэф.
+    CALORIES_MEAN_SPEED_SHIFT = 1.79  # поправка
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий во время бега."""
@@ -109,14 +115,14 @@ class Running(Training):
                 )
 
 
-@reg_workout("WLK")
+@reg_workout('WLK')
 class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
-    LEN_STEP = 0.65
+    LEN_STEP = 0.65  # метры
     CALORIES_WEIGHT_MULTIPLIER = 0.035
     CALORIES_SPEED_HEIGHT_MULTIPLIER = 0.029
-    CM_IN_M = 100
-    KMH_IN_MSEC = 0.278
+    CM_IN_M = 100  # сантиметров в метре
+    KMH_IN_MSEC = 0.278  # коэф. для перевода км/ч в м/с
 
     def __init__(self,
                  action: int,
@@ -144,10 +150,10 @@ class SportsWalking(Training):
         )
 
 
-@reg_workout("SWM")
+@reg_workout('SWM')
 class Swimming(Training):
     """Тренировка: плавание."""
-    LEN_STEP = 1.38
+    LEN_STEP = 1.38  # метры
     CALORIES_MEAN_SPEED_MULTIPLIER = 2
     CALORIES_MEAN_SPEED_SHIFT = 1.1
 
@@ -199,7 +205,8 @@ def read_package(workout_type: str, data: list) -> Training:
 
 
 def main(training: Training) -> None:
-    """Главная функция."""
+    """Главная функция.
+    Выводит информационное сообщение о параметрах тренировки."""
     info = training.show_training_info()
     print(info.get_message())
 
