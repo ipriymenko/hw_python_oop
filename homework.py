@@ -2,7 +2,7 @@
 import inspect
 from abc import abstractmethod
 from dataclasses import dataclass, asdict
-from typing import Callable, Type
+from typing import Callable, Type, ClassVar
 
 # Словарь - индекс, связывает класс тренировки с данными
 workout_index = {}
@@ -50,9 +50,7 @@ class InfoMessage:
 
     def get_message(self) -> str:
         """Получить текст информационного сообщения."""
-
         return self.MESSAGE.format(**asdict(self))
-
 
 class Training:
     """Базовый класс тренировки."""
@@ -193,8 +191,8 @@ def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
 
     if workout_type not in workout_index:
-        raise Exception(f'Wrong workout type "{workout_type}" '
-                        f'(expected types: {list(workout_index.keys())})!')
+        raise KeyError(f'Wrong workout type "{workout_type}" '
+                       f'(expected types: {list(workout_index.keys())})!')
 
     expected_args = workout_index[workout_type].data_len
     if expected_args != len(data):
